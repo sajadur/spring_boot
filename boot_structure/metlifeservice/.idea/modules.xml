@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/CommonRepository/CommonRepository.iml" filepath="$PROJECT_DIR$/CommonRepository/CommonRepository.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Commons/Commons.iml" filepath="$PROJECT_DIR$/Commons/Commons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/EncryptionService/EncryptionService.iml" filepath="$PROJECT_DIR$/EncryptionService/EncryptionService.iml" />
+      <module fileurl="file://$PROJECT_DIR$/metlife-service.iml" filepath="$PROJECT_DIR$/metlife-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ServiceApp/metlife-service-api.iml" filepath="$PROJECT_DIR$/ServiceApp/metlife-service-api.iml" />
+    </modules>
+  </component>
+</project>

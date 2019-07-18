@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns="http://www.springframework.org/schema/beans"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                            http://www.springframework.org/schema/beans/spring-beans.xsd
+                            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+                            http://www.springframework.org/schema/tx
+                            http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <beans profile="qa">
+        <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+
+        <!-- Load in application properties reference -->
+        <bean id="applicationProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+            <property name="locations">
+                <list>
+                    <value>classpath:configuration/configuration.properties</value>
+                    <value>classpath:configuration/masking_settings.properties</value>
+                    <value>classpath:configuration/message.properties</value>
+                    <value>classpath:configuration/db/db.qa.properties</value>
+                    <value>classpath:configuration/mail/mail.qa.properties</value>
+                    <value>classpath:configuration/sms/sms.qa.properties</value>
+                    <value>classpath:configuration/application_settings.properties</value>
+                    <value>classpath:configuration/lookup_settings.properties</value>
+                    <value>classpath:configuration/host-credential/host-credential.qa.properties</value>
+                    <value>classpath:configuration/2fa/2fa.qa.properties</value>
+                    <value>classpath:configuration/ssl-certificate/ssl-certificate.qa.properties</value>
+                </list>
+            </property>
+            <property name="ignoreUnresolvablePlaceholders" value="true"/>
+        </bean>
+
+        <!-- Configure data access -->
+        <bean id="dataSource"
+              class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close"
+              p:driverClassName="${db.driver}"
+              p:url="${db.url}"
+              p:username="${db.username}"
+              p:password="${db.password}"/>
+
+        <bean class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate"
+              c:dataSource-ref="dataSource"/>
+
+        <bean id="sessionFactory"
+              class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+            <property name="dataSource" ref="dataSource"/>
+            <property name="packagesToScan">
+                <list>
+                    <value>com.brainstation</value>
+                </list>
+            </property>
+            <property name="hibernateProperties">
+                <props>
+                    <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+                    <prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+                    <prop key="hibernate.jdbc.use_get_generated_keys">${hibernate.jdbc.use_get_generated_keys}</prop>
+                </props>
+            </property>
+        </bean>
+        <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+            <property name="sessionFactory" ref="sessionFactory"/>
+        </bean>
+        <bean id="persistenceExceptionTranslationPostProcessor"
+              class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+
+        <!-- Configure log4j-->
+        <bean id="logContext"
+              class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+            <property name="targetClass" value="org.apache.logging.log4j.LogManager" />
+            <property name="targetMethod" value="getContext" />
+            <property name="arguments" value="false" />
+        </bean>
+
+        <bean id="logContextConfigLocation" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+            <property name="targetObject" ref="logContext" />
+            <property name="targetMethod" value="setConfigLocation" />
+            <property name="arguments">
+                <list>
+                    <value>classpath:configuration/logging/log4j2.qa.properties</value>
+                </list>
+            </property>
+        </bean>
+        <bean id="logContextReconfigure"
+              class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+            <property name="targetObject" ref="logContext" />
+            <property name="targetMethod" value="reconfigure" />
+        </bean>
+
+        <!-- Email Configuration -->
+        <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+            <property name="host" value="${mail.default.host}"/>
+            <property name="port" value="${mail.default.port}"/>
+            <property name="username" value="${mail.default.user}"/>
+            <property name="password" value="${mail.default.password}"/>
+            <property name="javaMailProperties">
+                <props>
+                    <prop key="mail.smtp.auth">${mail.default.auth}</prop>
+                    <prop key="mail.smtp.starttls.enable">${mail.default.starttls.enable}</prop>
+                </props>
+            </property>
+        </bean>
+        <bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+            <property name="velocityProperties">
+                <value>
+                    resource.loader=class
+                    class.resource.loader.class=org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
+                </value>
+            </property>
+        </bean>
+        <bean id="emailSender" class="com.brainstation.dw.serviceapp.common.helper.emailsmshelper.EmailSender">
+            <property name="mailSender" ref="mailSender"/>
+            <property name="velocityEngine" ref="velocityEngine"/>
+        </bean>
+        <!--set application properties-->
+        <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+            <property name="targetObject">
+                <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                    <property name="targetClass" value="java.lang.System"/>
+                    <property name="targetMethod" value="getProperties"/>
+                </bean>
+            </property>
+            <property name="targetMethod" value="putAll"/>
+            <property name="arguments">
+                <util:properties>
+                    <prop key="javax.net.ssl.trustStore">${application.ssl.trust.store.location}</prop>
+                    <prop key="javax.net.ssl.trustStorePassword">${application.ssl.trust.store.password}</prop>
+                    <prop key="javax.net.ssl.trustStoreType">${application.ssl.trust.store.type}</prop>
+                </util:properties>
+            </property>
+        </bean>
+        <!--end-->
+        <!--swagger configuration-->
+        <bean class="com.brainstation.dw.serviceapp.common.swagger.SwaggerConfiguration"/>
+        <!--end-->
+    </beans>
+</beans>

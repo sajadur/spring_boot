@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Implementation-Title: ServiceApp Maven Webapp
+Implementation-Version: 0.0.1.0
+Built-By: sajadur
+Implementation-Vendor-Id: com.metlife
+Created-By: IntelliJ IDEA
+Build-Jdk: 1.8
+Main-Class: ${start-class}
+

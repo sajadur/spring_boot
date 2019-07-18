@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns="http://www.springframework.org/schema/beans" xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                            http://www.springframework.org/schema/beans/spring-beans.xsd
+                            http://www.springframework.org/schema/tx
+                            http://www.springframework.org/schema/tx/spring-tx.xsd
+                            http://www.springframework.org/schema/util
+                            http://www.springframework.org/schema/util/spring-util.xsd
+                            http://www.springframework.org/schema/data/jpa
+                            http://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+
+    <beans profile="dev">
+        <tx:annotation-driven proxy-target-class="true"/>
+
+        <!-- Load in application properties reference -->
+        <bean id="applicationProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+            <property name="locations">
+                <list>
+                    <value>classpath:configuration/configuration.properties</value>
+                    <value>classpath:configuration/masking_settings.properties</value>
+                    <value>classpath:configuration/message.properties</value>
+                    <value>classpath:configuration/db/db.dev.properties</value>
+                    <value>classpath:configuration/host-credential/host-credential.dev.properties</value>
+                    <value>classpath:configuration/ssl-certificate/ssl-certificate.dev.properties</value>
+                </list>
+            </property>
+            <property name="ignoreUnresolvablePlaceholders" value="true"/>
+        </bean>
+
+        <!-- Configure data access -->
+        <!--<jpa:repositories base-package="com.metlife" />
+
+        <bean id="dataSource"
+              class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close"
+              p:driverClassName="${db.driver}"
+              p:url="${db.url}"
+              p:username="${db.username}"
+              p:password="${db.password}"/>
+
+        <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+            <property name="database" value="POSTGRESQL" />
+            <property name="generateDdl" value="false" />
+            <property name="showSql" value="true" />
+        </bean>
+
+        <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" >
+            <property name="dataSource" ref="dataSource" />
+            <property name="jpaVendorAdapter" ref="jpaVendorAdapter" />
+            <property name="packagesToScan" value="com.metlife" />
+        </bean>
+
+        <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager"
+              p:entityManagerFactory-ref="entityManagerFactory" />
+
+        <bean id="persistenceExceptionTranslationPostProcessor"
+              class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+-->
+        <!-- Configure data access end -->
+
+        <!-- Configure log4j-->
+        <bean id="logContext"
+              class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+            <property name="targetClass" value="org.apache.logging.log4j.core.LoggerContext" />
+            <property name="targetMethod" value="getContext" />
+            <property name="arguments" value="false" />
+        </bean>
+
+        <bean id="logContextConfigLocation" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+            <property name="targetObject" ref="logContext" />
+            <property name="targetMethod" value="setConfigLocation" />
+            <property name="arguments">
+                <list>
+                    <value>classpath:configuration/logging/log4j2.dev.properties</value>
+                </list>
+            </property>
+        </bean>
+        <bean id="logContextReconfigure"
+                     class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+            <property name="targetObject" ref="logContext" />
+            <property name="targetMethod" value="reconfigure" />
+        </bean>
+
+        <!-- Configure log4j end-->
+
+
+
+        <!--set application properties-->
+        <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+            <property name="targetObject">
+                <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                    <property name="targetClass" value="java.lang.System"/>
+                    <property name="targetMethod" value="getProperties"/>
+                </bean>
+            </property>
+            <property name="targetMethod" value="putAll"/>
+            <property name="arguments">
+                <util:properties>
+                    <!--<prop key="javax.net.ssl.trustStore">${application.ssl.trust.store.location}</prop>
+                    <prop key="javax.net.ssl.trustStorePassword">${application.ssl.trust.store.password}</prop>
+                    <prop key="javax.net.ssl.trustStoreType">${application.ssl.trust.store.type}</prop>-->
+                </util:properties>
+            </property>
+        </bean>
+        <!--end-->
+
+    </beans>
+</beans>
